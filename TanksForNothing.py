@@ -195,17 +195,202 @@ class Effect:
             particle.draw(screen)
 
 class Obstacle:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, obstacle_type=None):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.rect = pygame.Rect(x - width//2, y - height//2, width, height)
-    
+
+        # Define obstacle types: bunker, barracks, watchtower, satellite, supply_depot
+        if obstacle_type is None:
+            self.type = random.choice(['bunker', 'barracks', 'watchtower', 'satellite', 'supply_depot'])
+        else:
+            self.type = obstacle_type
+
     def draw(self, screen):
-        pygame.draw.rect(screen, OBSTACLE_VARS['rock_color'], self.rect)
+        if self.type == 'bunker':
+            self._draw_bunker(screen)
+        elif self.type == 'barracks':
+            self._draw_barracks(screen)
+        elif self.type == 'watchtower':
+            self._draw_watchtower(screen)
+        elif self.type == 'satellite':
+            self._draw_satellite(screen)
+        elif self.type == 'supply_depot':
+            self._draw_supply_depot(screen)
+        else:
+            # Default fallback
+            pygame.draw.rect(screen, OBSTACLE_VARS['rock_color'], self.rect)
+            pygame.draw.rect(screen, BLACK, self.rect, 2)
+
+    def _draw_bunker(self, screen):
+        """Draw a military bunker with sandbags"""
+        # Main bunker body (dark gray concrete)
+        bunker_color = (80, 80, 80)
+        pygame.draw.rect(screen, bunker_color, self.rect)
+
+        # Darker top (roof)
+        roof_rect = pygame.Rect(self.rect.x, self.rect.y, self.rect.width, self.rect.height // 4)
+        pygame.draw.rect(screen, (60, 60, 60), roof_rect)
+
+        # Firing slit (small black rectangle)
+        slit_width = self.width // 3
+        slit_height = 4
+        slit_x = self.rect.x + (self.width - slit_width) // 2
+        slit_y = self.rect.y + self.height // 2
+        pygame.draw.rect(screen, BLACK, (slit_x, slit_y, slit_width, slit_height))
+
+        # Sandbag details (small brown circles on the sides)
+        sandbag_color = (101, 67, 33)
+        bag_size = 6
+        for i in range(3):
+            # Left side sandbags
+            pygame.draw.circle(screen, sandbag_color,
+                             (self.rect.x + 5, self.rect.y + 10 + i * 12), bag_size)
+            # Right side sandbags
+            pygame.draw.circle(screen, sandbag_color,
+                             (self.rect.x + self.width - 5, self.rect.y + 10 + i * 12), bag_size)
+
+        # Border
         pygame.draw.rect(screen, BLACK, self.rect, 2)
-    
+
+    def _draw_barracks(self, screen):
+        """Draw military barracks building"""
+        # Main building (olive drab)
+        building_color = (107, 98, 71)
+        pygame.draw.rect(screen, building_color, self.rect)
+
+        # Roof (darker)
+        roof_rect = pygame.Rect(self.rect.x - 3, self.rect.y - 3, self.rect.width + 6, self.rect.height // 5)
+        pygame.draw.rect(screen, (70, 65, 50), roof_rect)
+
+        # Windows (small dark rectangles)
+        window_color = (30, 30, 40)
+        window_width = max(8, self.width // 8)
+        window_height = max(8, self.height // 6)
+
+        # Draw 2x2 grid of windows
+        for row in range(2):
+            for col in range(2):
+                window_x = self.rect.x + (col + 1) * (self.width // 3) - window_width // 2
+                window_y = self.rect.y + (row + 1) * (self.height // 3) - window_height // 2
+                pygame.draw.rect(screen, window_color, (window_x, window_y, window_width, window_height))
+
+        # Door (brown rectangle at bottom center)
+        door_width = self.width // 4
+        door_height = self.height // 3
+        door_x = self.rect.x + (self.width - door_width) // 2
+        door_y = self.rect.y + self.height - door_height - 2
+        pygame.draw.rect(screen, (60, 40, 20), (door_x, door_y, door_width, door_height))
+
+        # Border
+        pygame.draw.rect(screen, BLACK, self.rect, 2)
+
+    def _draw_watchtower(self, screen):
+        """Draw a military watchtower"""
+        # Base/legs (dark brown)
+        base_color = (70, 50, 30)
+        base_width = self.width // 2
+        base_x = self.rect.x + (self.width - base_width) // 2
+        base_rect = pygame.Rect(base_x, self.rect.y + self.height // 2, base_width, self.height // 2)
+        pygame.draw.rect(screen, base_color, base_rect)
+
+        # Tower platform (gray)
+        platform_color = (90, 90, 90)
+        platform_height = self.height // 2
+        platform_rect = pygame.Rect(self.rect.x, self.rect.y, self.rect.width, platform_height)
+        pygame.draw.rect(screen, platform_color, platform_rect)
+
+        # Railing (white lines)
+        pygame.draw.rect(screen, WHITE, (self.rect.x, self.rect.y + platform_height - 3, self.rect.width, 2))
+
+        # Observation window
+        window_size = min(self.width // 3, self.height // 4)
+        window_x = self.rect.x + (self.width - window_size) // 2
+        window_y = self.rect.y + platform_height // 3
+        pygame.draw.rect(screen, BLACK, (window_x, window_y, window_size, window_size))
+
+        # Support beams
+        beam_width = 3
+        pygame.draw.rect(screen, base_color, (base_x + 2, self.rect.y + platform_height, beam_width, self.height // 2))
+        pygame.draw.rect(screen, base_color, (base_x + base_width - beam_width - 2, self.rect.y + platform_height, beam_width, self.height // 2))
+
+        # Border
+        pygame.draw.rect(screen, BLACK, self.rect, 2)
+
+    def _draw_satellite(self, screen):
+        """Draw a satellite dish installation"""
+        # Base platform (gray)
+        platform_color = (100, 100, 100)
+        pygame.draw.rect(screen, platform_color, self.rect)
+
+        # Control box (darker gray box at bottom)
+        box_height = self.height // 3
+        box_rect = pygame.Rect(self.rect.x + 5, self.rect.y + self.height - box_height - 5,
+                              self.width // 3, box_height)
+        pygame.draw.rect(screen, (60, 60, 60), box_rect)
+
+        # Small indicator lights
+        pygame.draw.circle(screen, GREEN, (box_rect.x + 8, box_rect.y + 8), 3)
+        pygame.draw.circle(screen, RED, (box_rect.x + 16, box_rect.y + 8), 3)
+
+        # Satellite dish (white/light gray circle)
+        dish_radius = min(self.width, self.height) // 3
+        dish_center_x = self.rect.x + self.width - dish_radius - 10
+        dish_center_y = self.rect.y + dish_radius + 10
+
+        # Dish outer rim
+        pygame.draw.circle(screen, (200, 200, 200), (dish_center_x, dish_center_y), dish_radius)
+        # Dish inner
+        pygame.draw.circle(screen, (180, 180, 180), (dish_center_x, dish_center_y), dish_radius - 3)
+        # Dish center
+        pygame.draw.circle(screen, (140, 140, 140), (dish_center_x, dish_center_y), dish_radius // 3)
+
+        # Support pole
+        pole_width = 4
+        pygame.draw.rect(screen, (80, 80, 80),
+                        (dish_center_x - pole_width//2, dish_center_y + dish_radius//2,
+                         pole_width, self.height // 3))
+
+        # Border
+        pygame.draw.rect(screen, BLACK, self.rect, 2)
+
+    def _draw_supply_depot(self, screen):
+        """Draw a military supply depot with crates"""
+        # Main depot (tan/brown)
+        depot_color = (120, 100, 70)
+        pygame.draw.rect(screen, depot_color, self.rect)
+
+        # Crates stacked (darker brown rectangles)
+        crate_color = (80, 60, 40)
+        crate_size = min(self.width, self.height) // 4
+
+        # Draw grid of crates
+        for row in range(2):
+            for col in range(2):
+                crate_x = self.rect.x + col * (self.width // 2) + 10
+                crate_y = self.rect.y + row * (self.height // 2) + 10
+                crate_rect = pygame.Rect(crate_x, crate_y, crate_size, crate_size)
+                pygame.draw.rect(screen, crate_color, crate_rect)
+                pygame.draw.rect(screen, BLACK, crate_rect, 1)
+
+                # X marking on crate
+                pygame.draw.line(screen, YELLOW,
+                               (crate_x + 2, crate_y + 2),
+                               (crate_x + crate_size - 2, crate_y + crate_size - 2), 2)
+                pygame.draw.line(screen, YELLOW,
+                               (crate_x + crate_size - 2, crate_y + 2),
+                               (crate_x + 2, crate_y + crate_size - 2), 2)
+
+        # Warning stripes (yellow and black)
+        stripe_width = 5
+        for i in range(0, self.width, stripe_width * 2):
+            pygame.draw.rect(screen, YELLOW, (self.rect.x + i, self.rect.y, stripe_width, 3))
+
+        # Border
+        pygame.draw.rect(screen, BLACK, self.rect, 2)
+
     def get_rect(self):
         return self.rect
 
@@ -723,25 +908,106 @@ class Tank:
         
             pygame.draw.polygon(screen, color, barrel_corners)
             pygame.draw.polygon(screen, WHITE, barrel_corners, 1)
-        
+
             # Draw health bar
             self.draw_health_bar(screen)
+
+            # Draw ammo indicator for players
+            if self.is_player:
+                self.draw_ammo_indicator(screen)
     
     def draw_health_bar(self, screen):
         bar_x = self.x - GAME_VARS['health_bar_width'] // 2
         bar_y = self.y - self.tank_size[1] - 15
-        
+
         # Background
         pygame.draw.rect(screen, RED, (bar_x, bar_y, GAME_VARS['health_bar_width'], GAME_VARS['health_bar_height']))
-        
+
         # Health
         health_ratio = self.health / self.max_health
         health_width = int(GAME_VARS['health_bar_width'] * health_ratio)
         pygame.draw.rect(screen, GREEN, (bar_x, bar_y, health_width, GAME_VARS['health_bar_height']))
-        
+
         # Border
         pygame.draw.rect(screen, WHITE, (bar_x, bar_y, GAME_VARS['health_bar_width'], GAME_VARS['health_bar_height']), 1)
-    
+
+    def draw_ammo_indicator(self, screen):
+        """Draw ammo count indicator below the player tank with militaristic styling"""
+        if not self.is_player:
+            return
+
+        # Create font for ammo display
+        ammo_font = pygame.font.Font(None, 24)
+
+        # Get total special ammo count
+        total_special_ammo = sum(self.powerup_shots_remaining.values())
+
+        # Position below the tank
+        indicator_y = self.y + self.tank_size[1] + 15
+
+        if total_special_ammo > 0:
+            # Draw background box with military styling
+            box_width = 80
+            box_height = 20
+            box_x = self.x - box_width // 2
+            box_y = indicator_y
+
+            # Dark background with yellow/black warning stripes
+            pygame.draw.rect(screen, (40, 40, 40), (box_x, box_y, box_width, box_height))
+
+            # Warning stripes on the sides
+            stripe_width = 3
+            for i in range(0, box_height, 6):
+                pygame.draw.rect(screen, YELLOW if (i // 6) % 2 == 0 else BLACK,
+                               (box_x, box_y + i, stripe_width, min(6, box_height - i)))
+                pygame.draw.rect(screen, YELLOW if (i // 6) % 2 == 0 else BLACK,
+                               (box_x + box_width - stripe_width, box_y + i, stripe_width, min(6, box_height - i)))
+
+            # Determine color based on powerup type
+            active_powerup = None
+            powerup_colors = {
+                'rapid_fire': RED,
+                'shotgun': ORANGE,
+                'homing': YELLOW
+            }
+
+            # Find which powerup is active
+            for powerup_type, ammo_count in self.powerup_shots_remaining.items():
+                if ammo_count > 0:
+                    active_powerup = powerup_type
+                    break
+
+            # Choose text color
+            if active_powerup and active_powerup in powerup_colors:
+                text_color = powerup_colors[active_powerup]
+            else:
+                text_color = ORANGE
+
+            # Draw ammo count text
+            ammo_text = ammo_font.render(f"AMMO: {total_special_ammo}", True, text_color)
+            text_rect = ammo_text.get_rect(center=(self.x, indicator_y + box_height // 2))
+            screen.blit(ammo_text, text_rect)
+
+            # Border
+            pygame.draw.rect(screen, text_color, (box_x, box_y, box_width, box_height), 2)
+        else:
+            # Show "STANDARD" when no special ammo
+            box_width = 90
+            box_height = 20
+            box_x = self.x - box_width // 2
+            box_y = indicator_y
+
+            # Dark gray background
+            pygame.draw.rect(screen, (50, 50, 50), (box_x, box_y, box_width, box_height))
+
+            # Standard ammo text in white
+            ammo_text = ammo_font.render("STANDARD", True, WHITE)
+            text_rect = ammo_text.get_rect(center=(self.x, indicator_y + box_height // 2))
+            screen.blit(ammo_text, text_rect)
+
+            # White border
+            pygame.draw.rect(screen, WHITE, (box_x, box_y, box_width, box_height), 1)
+
     def get_rect(self):
         return pygame.Rect(self.x - self.tank_size[0]//2, self.y - self.tank_size[1]//2,
                           self.tank_size[0], self.tank_size[1])
@@ -899,25 +1165,78 @@ class Tank:
     
     def update_ai(self, players, obstacles):
         if not self.is_player and players:
+            # Initialize stuck detection if not present
+            if not hasattr(self, 'last_position'):
+                self.last_position = (self.x, self.y)
+                self.stuck_counter = 0
+                self.unstuck_angle = None
+
             # Filter out dead players
             alive_players = [p for p in players if not getattr(p, 'is_dead', False)]
-            
+
             if not alive_players:
                 return None
-            
+
+            # Check if stuck (hasn't moved much)
+            distance_moved = math.sqrt((self.x - self.last_position[0])**2 + (self.y - self.last_position[1])**2)
+            if distance_moved < 0.5:  # Barely moved
+                self.stuck_counter += 1
+            else:
+                self.stuck_counter = 0
+                self.unstuck_angle = None
+
+            # Update last position
+            self.last_position = (self.x, self.y)
+
             # Find nearest alive player
-            nearest_player = min(alive_players, key=lambda p: 
+            nearest_player = min(alive_players, key=lambda p:
                 math.sqrt((p.x - self.x)**2 + (p.y - self.y)**2))
-            
+
             # Calculate direct angle to player
             dx = nearest_player.x - self.x
             dy = nearest_player.y - self.y
             direct_angle = math.atan2(dy, dx)
             distance_to_player = math.sqrt(dx*dx + dy*dy)
-            
+
+            # If stuck for too long, execute unstuck maneuver
+            if self.stuck_counter > 30:
+                if self.unstuck_angle is None:
+                    # Choose a random direction to escape
+                    self.unstuck_angle = self.angle + random.choice([math.pi/2, -math.pi/2, math.pi])
+
+                # Turn toward unstuck angle
+                angle_diff = self.unstuck_angle - self.angle
+                while angle_diff > math.pi:
+                    angle_diff -= 2 * math.pi
+                while angle_diff < -math.pi:
+                    angle_diff += 2 * math.pi
+
+                if abs(angle_diff) > 0.1:
+                    if angle_diff > 0:
+                        self.turn_right()
+                    else:
+                        self.turn_left()
+
+                # Try to move in unstuck direction
+                new_x = self.x + math.cos(self.angle) * self.movement_speed
+                new_y = self.y + math.sin(self.angle) * self.movement_speed
+                if not self.check_obstacle_collision(obstacles, new_x, new_y):
+                    self.x = new_x
+                    self.y = new_y
+                    self._keep_in_bounds()
+                    if self.trail:
+                        self.trail.update()
+
+                # Reset stuck counter after trying to escape
+                if self.stuck_counter > 60:
+                    self.stuck_counter = 0
+                    self.unstuck_angle = None
+
+                return self.shoot()
+
             # Check if direct path to player is blocked
             path_blocked = self._is_path_blocked(self.x, self.y, nearest_player.x, nearest_player.y, obstacles)
-            
+
             if not path_blocked:
                 # Direct path is clear - turn toward player
                 angle_diff = direct_angle - self.angle
@@ -925,20 +1244,20 @@ class Tank:
                     angle_diff -= 2 * math.pi
                 while angle_diff < -math.pi:
                     angle_diff += 2 * math.pi
-                
+
                 if abs(angle_diff) > 0.1:
                     if angle_diff > 0:
                         self.turn_right()
                     else:
                         self.turn_left()
             else:
-                # Path is blocked - use wall following to navigate around obstacles
-                self._follow_wall_to_target(direct_angle, obstacles)
-            
+                # Path is blocked - use improved wall following to navigate around obstacles
+                self._follow_wall_to_target(direct_angle, obstacles, nearest_player)
+
             # Try to move forward
             new_x = self.x + math.cos(self.angle) * self.movement_speed
             new_y = self.y + math.sin(self.angle) * self.movement_speed
-            
+
             if not self.check_obstacle_collision(obstacles, new_x, new_y):
                 # Maintain appropriate combat distance
                 if distance_to_player > 200:  # Move closer
@@ -965,7 +1284,7 @@ class Tank:
                     # Update trail for enemy movement
                     if self.trail:
                         self.trail.update()
-            
+
             return self.shoot()
         return None
     
@@ -986,57 +1305,89 @@ class Tank:
                     return True
         return False
     
-    def _follow_wall_to_target(self, target_angle, obstacles):
-        """Simple wall following behavior to navigate around obstacles"""
-        # Check if we can move in our current direction
-        forward_x = self.x + math.cos(self.angle) * 60
-        forward_y = self.y + math.sin(self.angle) * 60
-        
-        if self.check_obstacle_collision(obstacles, forward_x, forward_y):
-            # We're facing an obstacle, turn to follow the wall
-            # Try turning right first (right-hand rule)
-            right_angle = self.angle + math.pi/2
-            right_x = self.x + math.cos(right_angle) * 40
-            right_y = self.y + math.sin(right_angle) * 40
-            
-            left_angle = self.angle - math.pi/2
-            left_x = self.x + math.cos(left_angle) * 40
-            left_y = self.y + math.sin(left_angle) * 40
-            
-            # Choose the direction that's clearer and closer to target
-            right_blocked = self.check_obstacle_collision(obstacles, right_x, right_y)
-            left_blocked = self.check_obstacle_collision(obstacles, left_x, left_y)
-            
-            if not right_blocked and not left_blocked:
-                # Both sides clear, choose the one closer to target direction
-                right_diff = abs(right_angle - target_angle)
-                left_diff = abs(left_angle - target_angle)
-                if right_diff < left_diff:
-                    self.turn_right()
-                else:
-                    self.turn_left()
-            elif not right_blocked:
-                self.turn_right()
-            elif not left_blocked:
-                self.turn_left()
+    def _follow_wall_to_target(self, target_angle, obstacles, target_player):
+        """Improved wall following behavior to navigate around obstacles"""
+        # Use multiple look-ahead distances for better obstacle detection
+        look_ahead_distances = [60, 80, 100]
+        collision_detected = False
+
+        for distance in look_ahead_distances:
+            forward_x = self.x + math.cos(self.angle) * distance
+            forward_y = self.y + math.sin(self.angle) * distance
+            if self.check_obstacle_collision(obstacles, forward_x, forward_y):
+                collision_detected = True
+                break
+
+        if collision_detected:
+            # We're facing an obstacle, find the best escape route
+            # Test multiple angles to find the clearest path
+            test_angles = [
+                self.angle + math.pi/4,      # 45 degrees right
+                self.angle - math.pi/4,      # 45 degrees left
+                self.angle + math.pi/2,      # 90 degrees right
+                self.angle - math.pi/2,      # 90 degrees left
+                self.angle + 3*math.pi/4,    # 135 degrees right
+                self.angle - 3*math.pi/4     # 135 degrees left
+            ]
+
+            best_angle = None
+            best_score = -float('inf')
+
+            for test_angle in test_angles:
+                # Check if this angle is clear
+                test_x = self.x + math.cos(test_angle) * 60
+                test_y = self.y + math.sin(test_angle) * 60
+
+                if not self.check_obstacle_collision(obstacles, test_x, test_y):
+                    # Calculate score based on:
+                    # 1. How close it gets us to the target
+                    # 2. How clear the path is
+                    angle_to_target = math.atan2(target_player.y - self.y, target_player.x - self.x)
+                    angle_diff = abs(test_angle - angle_to_target)
+                    while angle_diff > math.pi:
+                        angle_diff -= 2 * math.pi
+                    while angle_diff < -math.pi:
+                        angle_diff += 2 * math.pi
+
+                    # Prefer angles closer to target direction
+                    score = -abs(angle_diff)
+
+                    if score > best_score:
+                        best_score = score
+                        best_angle = test_angle
+
+            if best_angle is not None:
+                # Turn toward the best angle
+                angle_diff = best_angle - self.angle
+                while angle_diff > math.pi:
+                    angle_diff -= 2 * math.pi
+                while angle_diff < -math.pi:
+                    angle_diff += 2 * math.pi
+
+                if abs(angle_diff) > 0.1:
+                    if angle_diff > 0:
+                        self.turn_right()
+                    else:
+                        self.turn_left()
             else:
-                # Both sides blocked, turn around
+                # No clear path found, turn around
                 self.turn_right()
         else:
-            # Path ahead is clear, but we might want to turn toward target
+            # Path ahead is clear, gradually turn toward target
             angle_diff = target_angle - self.angle
             while angle_diff > math.pi:
                 angle_diff -= 2 * math.pi
             while angle_diff < -math.pi:
                 angle_diff += 2 * math.pi
-            
+
             # Only turn toward target if it won't immediately cause collision
-            test_angle = self.angle + (0.2 if angle_diff > 0 else -0.2)
-            test_x = self.x + math.cos(test_angle) * 40
-            test_y = self.y + math.sin(test_angle) * 40
-            
+            turn_amount = 0.15 if abs(angle_diff) > 0.15 else abs(angle_diff)
+            test_angle = self.angle + (turn_amount if angle_diff > 0 else -turn_amount)
+            test_x = self.x + math.cos(test_angle) * 50
+            test_y = self.y + math.sin(test_angle) * 50
+
             if not self.check_obstacle_collision(obstacles, test_x, test_y):
-                if abs(angle_diff) > 0.2:
+                if abs(angle_diff) > 0.1:
                     if angle_diff > 0:
                         self.turn_right()
                     else:
